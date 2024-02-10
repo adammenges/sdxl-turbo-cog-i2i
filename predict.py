@@ -17,6 +17,11 @@ class Predictor(BasePredictor):
             variant="fp16"     
         ).to("cuda")
 
+    def load_image(self, path):
+        print('loading image')
+        shutil.copyfile(path, "/tmp/image.png")
+        return load_image("/tmp/image.png").convert("RGB")
+
     def predict(
         self,
         prompt: str = Input(
@@ -26,6 +31,10 @@ class Predictor(BasePredictor):
         negative_prompt: str = Input(
             description="Input Negative Prompt",
             default="3d, cgi, render, bad quality, normal quality",
+        ),
+        image: Path = Input(
+            description="Input image for img2img or inpaint mode",
+            default=None,
         ),
         num_outputs: int = Input(
             description="Number of images to output.",
@@ -50,6 +59,7 @@ class Predictor(BasePredictor):
         common_args = {
             "prompt": [prompt] * num_outputs,
             "negative_prompt": [negative_prompt] * num_outputs,
+            "image": self.load_image(image),
             "guidance_scale": 0,
             "generator": generator,
             "num_inference_steps": num_inference_steps,
